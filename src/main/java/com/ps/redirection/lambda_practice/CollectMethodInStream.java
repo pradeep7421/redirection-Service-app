@@ -21,6 +21,7 @@ public class CollectMethodInStream {
 	        students.add(new Student("David", 20, 72));
 	        students.add(new Student("Charlie", 21, 85));
 	        students.add(new Student("Charlies", 22, 96));
+	        students.add(new Student("Eve", 44, 94));
 	        students.add(null);  // Null entry in List
 	        
 	        List<Student> filterStudent =students.stream().filter(Objects::nonNull ).collect(Collectors.toList());
@@ -37,6 +38,10 @@ public class CollectMethodInStream {
 	       //Grouping by name
 	       Map<String,List<Student>> groupingByName= students.stream().filter(Objects::nonNull).collect(Collectors.groupingBy(Student::getName));
 	       System.out.println("groupingByName - "+groupingByName);
+	       
+	       Map<String,TreeSet<Student>> groupingByNameByComparatorSorting= students.stream().filter(Objects::nonNull).collect(Collectors.groupingBy(Student::getName,Collectors.toCollection(()->new TreeSet<>((a,b)->-Integer.valueOf(a.getAge()).compareTo(Integer.valueOf(b.getAge()))))));
+	       System.out.println("groupingByNameByComparatorSorting  - "+groupingByNameByComparatorSorting);
+	       
 	       
 	       //count the no of students by name 
 	       Map<String ,Long> studentCountByname = students.stream().filter(Objects::nonNull).collect(Collectors.groupingBy(Student::getName,Collectors.counting()));
@@ -87,7 +92,7 @@ public class CollectMethodInStream {
 	    
 	     //Find that student object which has second highest marks whose name is Alice
 	       Optional<Student> studentMarksSecondHighest4 =students.stream()
-	    	       .filter(e-> Objects.nonNull(e) && e.getName() =="Alice"  )
+	    	       .filter(e-> Objects.nonNull(e) && "Alice".equals(e.getName())  )
 	    	       .collect(Collectors.toCollection(
 	    	           () -> new TreeSet<>(  (a,b)->-Integer.valueOf(a.getMarks()).compareTo(Integer.valueOf(b.getMarks())))
 	    	    		   ))
@@ -99,19 +104,11 @@ public class CollectMethodInStream {
 		Map<String, Optional<Student>> result = students
 				.stream().filter(
 						Objects::nonNull)
-				.collect(
-						Collectors
-								.groupingBy(Student::getName,
-										Collectors
-												.collectingAndThen(
-														Collectors
-																.toCollection(
-																		() -> new TreeSet<>((a,
-																				b) -> -Integer.valueOf(a.getMarks())
-																						.compareTo(Integer.valueOf(
-																								b.getMarks())))),
-														set -> set.stream().skip(1).findFirst())));
-	System.out.println(result);
+				.collect(Collectors.groupingBy(Student::getName,Collectors.collectingAndThen(Collectors.toCollection(
+				() -> new TreeSet<>((a,b) -> -Integer.valueOf(a.getMarks()).compareTo(Integer.valueOf(b.getMarks())))),
+				set -> set.stream().skip(1).findFirst())
+				));
+	   System.out.println(result);
 	
 	}
 }
